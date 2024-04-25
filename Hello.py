@@ -1,51 +1,41 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import streamlit as st
-from streamlit.logger import get_logger
+from transformers import pipeline
 
-LOGGER = get_logger(__name__)
+# Load the question-answering pipeline
+qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
 
+def answer_question(question, context):
+    # Pass the question and context to the pipeline
+    result = qa_pipeline(question=question, context=context)
 
-def run():
-    st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
-    )
+    # Extract the answer and score from the result
+    answer = result["answer"]
+    score = result["score"]
 
-    st.write("# Welcome to Streamlit! 👋")
+    return answer, score
 
-    st.sidebar.success("Select a demo above.")
+def main():
+    st.title("Document Question Answering")
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
+    # Get the document text from the user
+    document_text = st.text_area("Enter the document text", height=200)
 
+    # Get the question from the user
+    question = st.text_input("Enter your question")
+
+    if st.button("Answer"):
+        if document_text.strip() == "":
+            st.warning("Please enter the document text.")
+        elif question.strip() == "":
+            st.warning("Please enter a question.")
+        else:
+            # Answer the question
+            answer, score = answer_question(question, document_text)
+
+            # Display the answer and score
+            st.subheader("Answer")
+            st.write(answer)
+            st.write(f"Score: {score:.2f}")
 
 if __name__ == "__main__":
-    run()
+    main()
